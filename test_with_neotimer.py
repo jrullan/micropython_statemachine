@@ -42,6 +42,12 @@ def state4_logic():
         
 #============================================================
 # State Transitions Functions
+#
+# These are predefined transition functions that must evaluate
+# to True or False.
+#
+# Alternatively, you can force transitions during the state logic
+# (See state3_logic)
 #============================================================
 def state1_transition_to_2():
     return True                                     #<---- Transition from state1 to state2 immediately
