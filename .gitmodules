@@ -1,0 +1,3 @@
+[submodule "neotimer"]
+	path = neotimer
+	url = https://github.com/jrullan/micropython_neotimer
