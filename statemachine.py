@@ -8,7 +8,7 @@ class Transition:
 class StateMachine:
     def __init__(self):
         self.state_list = []
-        self.current_state = -1     #Indicates the current state number
+        self.current_state_index = -1     #Indicates the current state number
         self.execute_once = True    #Indicates that a transition to a different state has occurred
 
     # Creates a new state and adds it to the list
@@ -19,30 +19,39 @@ class StateMachine:
         self.state_list.append(state)
         return state
 
+    # Forces a transition to a particular state
+    def transition_to(self, state):
+        self.current_state_index = state.index
+        self.execute_once = True
+        return state
+
     # Runs the state machine
     def run(self):
         if len(self.state_list) == 0:
             return
         
-        if self.current_state == -1:
-            self.current_state = 0
+        if self.current_state_index == -1:
+            self.current_state_index = 0
         
         # Store current state to check if it changed during execution
-        initial_state = self.current_state
+        initial_state_index = self.current_state_index
         
-        # Execute the state's logic and get the next_state number
+        # Execute the state's logic and get the next_state_index number
         # If no transition ocurred returns it's own index as the next state index.
-        next_state = self.state_list[self.current_state].execute()
+        next_state_index = self.state_list[self.current_state_index].execute()
         
-        # If current_state remains the same then 
-        if initial_state == self.current_state:
+        # Process the transition if current_state remains the same after the state logic
+        # (This check is to ignore the transitions if the current_state has been modified
+        # by the state logic, or externally by the machine)
+        if initial_state_index == self.current_state_index:
             # If a different state number was returned, execute_once is True
-            if self.current_state != next_state:
+            if self.current_state_index != next_state_index:
                 self.execute_once = True
             else:
                 self.execute_once = False
-            self.current_state = next_state
-
+                
+            # Finally make the next state the current state
+            self.current_state_index = next_state_index
 
 
 class State:

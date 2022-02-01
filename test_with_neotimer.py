@@ -31,7 +31,15 @@ def state3_logic():
         
         counter += 1
         print("State 3 Logic Executed Once")
+        myMachine.transition_to(state4)             #<---- Force the transition to state4
 
+def state4_logic():
+    global counter
+    if myMachine.execute_once:
+        
+        counter += 1
+        print("State 4 Logic Executed Once")
+        
 #============================================================
 # State Transitions Functions
 #============================================================
@@ -50,6 +58,8 @@ state1 = myMachine.add_state(state1_logic)
 state2 = myMachine.add_state(state2_logic)
 
 state3 = myMachine.add_state(state3_logic)
+
+state4 = myMachine.add_state(state4_logic)
 
 
 #============================================================
