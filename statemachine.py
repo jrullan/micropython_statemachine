@@ -1,3 +1,25 @@
+#============================================================================
+# The state machine is composed of three different classes.
+#
+# 1. StateMachine - This is the class that executes and configures
+# the states and transitions. A machine contains a list of states.
+#
+# 2. State - This class implements a state consisting of it's execution
+# logic and it's list of transitions. When the machine executes a state,
+# it's logic is executed and all of its transitions are evaluated.
+# The first transition to evaluate to True is used by the machine
+# to determine its next state. A state contains a list of transitions.
+#
+# 3. Transition - This class is used to store a function to execute
+# that will return a boolean value of True or False. If it evaluates
+# to True, the state will use the transition's to_state_number to
+# tell the machine what the next state should be.
+#
+# Author: José Rullán
+# Date: February 1, 2022
+#============================================================================
+
+
 class Transition:
     def __init__(self, function, state):
         self.function = function
@@ -14,9 +36,8 @@ class StateMachine:
     # Creates a new state and adds it to the list
     # using the state_logic_function passed as parameter
     def add_state(self, state_logic_function):
-        if self.current_state_index == -1:
-            self.current_state_index = 0
-            
+        if self.current_state_index == -1:    #<---- Initially set current_state_index to 0
+            self.current_state_index = 0   
         state = State(state_logic_function)
         state.index = len(self.state_list)
         self.state_list.append(state)
@@ -32,9 +53,6 @@ class StateMachine:
     def run(self):
         if len(self.state_list) == 0:
             return
-        
-#         if self.current_state_index == -1:
-#             self.current_state_index = 0
         
         # Store current state to check if it changed during execution
         initial_state_index = self.current_state_index
