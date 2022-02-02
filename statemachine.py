@@ -14,6 +14,9 @@ class StateMachine:
     # Creates a new state and adds it to the list
     # using the state_logic_function passed as parameter
     def add_state(self, state_logic_function):
+        if self.current_state_index == -1:
+            self.current_state_index = 0
+            
         state = State(state_logic_function)
         state.index = len(self.state_list)
         self.state_list.append(state)
@@ -30,8 +33,8 @@ class StateMachine:
         if len(self.state_list) == 0:
             return
         
-        if self.current_state_index == -1:
-            self.current_state_index = 0
+#         if self.current_state_index == -1:
+#             self.current_state_index = 0
         
         # Store current state to check if it changed during execution
         initial_state_index = self.current_state_index
@@ -52,6 +55,8 @@ class StateMachine:
                 
             # Finally make the next state the current state
             self.current_state_index = next_state_index
+            
+        return self.current_state_index
 
 
 class State:
