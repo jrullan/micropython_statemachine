@@ -83,6 +83,10 @@ class StateMachine:
         self.state_list = []
         self.current_state_index = -1     #Indicates the current state number
         self.execute_once = True    #Indicates that a transition to a different state has occurred
+        
+        # Jog mode is used to prevent transitions including using transition_to
+        # The jog() method will execute each state sequentially preventing transitions.
+        self.jog_mode = False
 
     # Creates a new state and adds it to the list
     # using the state_logic_function passed as parameter
@@ -96,14 +100,26 @@ class StateMachine:
 
     # Forces a transition to a particular state
     def transition_to(self, state):
+        if self.jog_mode:
+            return -1
         self.current_state_index = state.index
         self.execute_once = True
-        return state
+        return state.index
+
+    # If jog_mode is True, each time jog() is called it will
+    # execute the next state in state_list, wrapping around
+    # to the first state when all have been called
+    def jog(self):
+        self.current_state_index += 1
+        if self.current_state_index >= len(self.state_list):
+            self.current_state_index = 0
+        self.execute_once = True
+        self.state_list[self.current_state_index].execute()
 
     # Runs the state machine
     def run(self):
-        if len(self.state_list) == 0:
-            return
+        if len(self.state_list) == 0 or self.jog_mode:
+            return -1
         
         # Store current state to check if it changed during execution
         initial_state_index = self.current_state_index

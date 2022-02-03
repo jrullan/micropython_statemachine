@@ -17,6 +17,11 @@ width = explorer.get_width()
 height = explorer.get_height()
 display_buffer = bytearray(width * height * 2)  # 2-bytes per pixel (RGB565)
 explorer.init(display_buffer)
+
+color_black = explorer.create_pen(0,0,0)
+color_white = explorer.create_pen(255,255,255)
+
+explorer.set_pen(color_black)
 explorer.clear()
 time.sleep(0.01) #<---- Needed otherwise crashes
 explorer.update()
@@ -27,6 +32,9 @@ explorer.update()
 def state0_logic():
     if state_machine.execute_once:
         print("Machine in State 0: System Initialization")
+        update_text("State 0")
+        explorer.update()
+        time.sleep(1)
 
     state_machine.transition_to(state1)
 
@@ -34,6 +42,7 @@ def state0_logic():
 def state1_logic():
     if state_machine.execute_once:
         print("Machine in State 1: Blinking Led")
+        update_text("State 1")
 
     if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
         state_machine.transition_to(state2)
@@ -45,6 +54,7 @@ def state1_logic():
 def state2_logic():
     if state_machine.execute_once:
         print("Machine in State 2: Led Off")
+        update_text("State 2")
         led.off()
         
     if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
@@ -74,14 +84,31 @@ def transition_from_any_to_0():
 #============================================================
 # Add transitions to states (optional)
 #============================================================
-# Attach a transition to state0 to all states.
-# Useful for an abnormal condition that requires a transition
-# from any state. 
+# Attach transitions to all states
 for state in state_machine.state_list:
     state.add_transition(transition_from_any_to_0, state0)
 
 
+def update_text(string):
+    explorer.set_clip(5,10,75,15)
+    explorer.set_pen(color_black)
+    explorer.clear()
+    explorer.set_pen(color_white)
+    explorer.text(string,5,10,100)
+
 
 # Main Loop: Run the state machine here
 while True:
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_Y)):
+        state_machine.jog_mode = True if state_machine.jog_mode == False else False
+        if state_machine.jog_mode:
+            print("Machine in Jog Mode")
+        else:
+            print("Machine in Run Mode")
+    
+    if state_machine.jog_mode:
+        if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
+            state_machine.jog()
+        
     state_machine.run()
+    explorer.update()  
