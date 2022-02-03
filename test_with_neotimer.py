@@ -46,7 +46,7 @@ def state3_logic():
     global counter
     if myMachine.execute_once:
         counter += 1
-        print("State 3 Logic Executed Once")
+        print("State 3 Logic:")
         
     myMachine.transition_to(state4)             #<---- Force the transition to state4
         
@@ -55,7 +55,7 @@ def state4_logic():
     global counter
     if myMachine.execute_once:
         counter += 1
-        print("State 4 Logic Executed Once")
+        print("State 4 Logic:")
     
     myMachine.transition_to(state5)             #<---- Force the transition to state5
 
@@ -64,7 +64,7 @@ def state5_logic():
     global counter
     if myMachine.execute_once:
         counter += 1
-        print("State 5 Logic Executed Once")
+        print("State 5 Logic:")
     
     myMachine.current_state_index = -1          #<---- Exit machine execution
 
