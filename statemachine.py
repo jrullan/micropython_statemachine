@@ -81,7 +81,7 @@ class Transition:
 class StateMachine:
     def __init__(self):
         self.state_list = []
-        self.current_state_index = -1     #Indicates the current state number
+        self.active_state_index = -1     #Indicates the current state number
         self.execute_once = True    #Indicates that a transition to a different state has occurred
         
         # Jog mode is used to prevent transitions including using transition_to
@@ -94,15 +94,15 @@ class StateMachine:
         state = State(state_logic_function)
         state.index = len(self.state_list)
         self.state_list.append(state)
-        if self.current_state_index == -1:    #<---- Initially set current_state_index to 0
-            self.current_state_index = 0
+        if self.active_state_index == -1:    #<---- Initially set active_state_index to 0
+            self.active_state_index = 0
         return state
 
     # Forces a transition to a particular state
     def transition_to(self, state):
         if self.jog_mode:
             return -1
-        self.current_state_index = state.index
+        self.active_state_index = state.index
         self.execute_once = True
         return state.index
 
@@ -111,11 +111,10 @@ class StateMachine:
     # to the first state when all have been called
     def jog(self):
         if not self.jog_mode:
-            return
-        
-        self.current_state_index += 1
-        if self.current_state_index >= len(self.state_list):
-            self.current_state_index = 0
+            return  
+        self.active_state_index += 1
+        if self.active_state_index >= len(self.state_list):
+            self.active_state_index = 0
         self.execute_once = True
 
     # Runs the state machine
@@ -124,18 +123,18 @@ class StateMachine:
             return -1
         
         # Store current state to check if it changed during execution
-        initial_state_index = self.current_state_index
+        current_state_index = self.active_state_index
         
         # Execute the state's logic and get the next_state_index number
         # If no transition ocurred returns it's own index as the next state index.
-        next_state_index = self.state_list[self.current_state_index].execute()
+        next_state_index = self.state_list[self.active_state_index].execute()
         
         # Process the transition if current_state remains the same after the state logic
         # (This check is to ignore the transitions if the current_state has been modified
         # by the state logic, or externally by the machine)
-        if initial_state_index == self.current_state_index:
+        if current_state_index == self.active_state_index:
             # If a different state number was returned, execute_once is True
-            if self.current_state_index != next_state_index:
+            if self.active_state_index != next_state_index:
                 self.execute_once = True
             else:
                 self.execute_once = False                            
@@ -143,9 +142,9 @@ class StateMachine:
             # jog_mode is True, in which case the next state index
             # would be the next sequential index when jog() is called.
             if not self.jog_mode:
-                self.current_state_index = next_state_index
+                self.active_state_index = next_state_index
         
-        return self.current_state_index
+        return self.active_state_index
 
 
 
