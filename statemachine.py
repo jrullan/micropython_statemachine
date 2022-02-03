@@ -110,6 +110,9 @@ class StateMachine:
     # execute the next state in state_list, wrapping around
     # to the first state when all have been called
     def jog(self):
+        if not self.jog_mode:
+            return
+        
         self.current_state_index += 1
         if self.current_state_index >= len(self.state_list):
             self.current_state_index = 0
