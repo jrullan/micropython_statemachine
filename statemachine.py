@@ -117,11 +117,10 @@ class StateMachine:
         if self.current_state_index >= len(self.state_list):
             self.current_state_index = 0
         self.execute_once = True
-        self.state_list[self.current_state_index].execute()
 
     # Runs the state machine
     def run(self):
-        if len(self.state_list) == 0 or self.jog_mode:
+        if len(self.state_list) == 0:
             return -1
         
         # Store current state to check if it changed during execution
@@ -139,12 +138,15 @@ class StateMachine:
             if self.current_state_index != next_state_index:
                 self.execute_once = True
             else:
-                self.execute_once = False
-                
-            # Finally make the next state the current state
-            self.current_state_index = next_state_index
-            
+                self.execute_once = False                            
+            # Finally make the next state the current state, unless
+            # jog_mode is True, in which case the next state index
+            # would be the next sequential index when jog() is called.
+            if not self.jog_mode:
+                self.current_state_index = next_state_index
+        
         return self.current_state_index
+
 
 
 class State:

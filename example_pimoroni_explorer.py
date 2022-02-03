@@ -106,8 +106,10 @@ while True:
         else:
             print("Machine in Run Mode")
     
-    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
-        state_machine.jog()
-        
+    
+    if state_machine.jog_mode:    
+        if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
+            state_machine.jog()
+    
     state_machine.run()
     explorer.update()  
