@@ -35,7 +35,7 @@ def state0_logic():
         update_text("State 0")
         explorer.update()
         time.sleep(1)
-    print("State 0 continous logic")
+
     state_machine.transition_to(state1)
 
 
@@ -82,11 +82,11 @@ def transition_from_any_to_0():
 
 
 #============================================================
-# Add transitions to states (optional)
+# Attach transitions to states (optional)
 #============================================================
 # Attach transitions to all states
 for state in state_machine.state_list:
-    state.add_transition(transition_from_any_to_0, state0)
+    state.attach_transition(transition_from_any_to_0, state0)
 
 
 def update_text(string):

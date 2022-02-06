@@ -41,7 +41,7 @@
 #                 return False
 #
 # 
-#         state1.add_transition(state1_transition_to_2, state2)   #<---- Attach state1 transition to state2, when some_condition == True
+#         state1.attach_transition(state1_transition_to_2, state2)   #<---- Attach state1 transition to state2, when some_condition == True
 #
 #
 #  4. Forced transitions
@@ -69,7 +69,6 @@
 # Author: José Rullán
 # Date: February 1, 2022
 #============================================================================
-import time
 
 class Transition:
     def __init__(self, function, state):
@@ -106,25 +105,26 @@ class StateMachine:
         self.forced_state_index = state.index
         return state.index
 
+    # Determines if there is a new state specified and
+    # makes it active.
+    def is_new_state(self):
+        if self.active_state_index != self.new_state_index:      #<---- From normal attached transitions
+            self.active_state_index = self.new_state_index
+            return True
+        elif self.active_state_index != self.forced_state_index: #<---- From forced transitions
+            self.active_state_index = self.forced_state_index
+            return True
+        else:
+            return False
+
     # If jog_mode is True, each time jog() is called it will
     # execute the next state in state_list, wrapping around
     # to the first state when all have been called
     def jog(self):
         if not self.jog_mode:
             return
-        prev_state = self.active_state_index
-        
-        if self.new_state_index != self.active_state_index:
-            #print("new_state_index while jogging",self.new_state_index)
-            self.execute_once = True
-            self.active_state_index = self.new_state_index
-            
-        elif self.forced_state_index != self.active_state_index:
-            #print("forced_state_index while jogging",self.forced_state_index)
-            self.execute_once = True
-            self.active_state_index = self.forced_state_index
-            
-        #print("state index", prev_state,"transitions",self.new_state_index, " forced",self.forced_state_index)
+        prev_state = self.active_state_index        
+        self.execute_once = self.is_new_state()
 
     # Runs the state machine
     def run(self):
@@ -138,38 +138,12 @@ class StateMachine:
 
         # Determine if execute_once should be True
         # (meaning a new state must be executed)
-        self.execute_once = False
         if not self.jog_mode:
-            
-            if self.new_state_index != self.active_state_index:        #<---- New state from transitions
-                self.execute_once = True
-                self.active_state_index = self.new_state_index                                                                    
-                
-            elif self.forced_state_index != self.active_state_index:   #<---- New forced state
-                self.execute_once = True
-                self.active_state_index = self.forced_state_index   
- 
+            self.execute_once = self.is_new_state()
+        else:
+            self.execute_once = False
+
         return self.active_state_index
-
-
-#         # Process the transition if current_state remains the same after the state logic
-#         # (This check is to ignore the transitions if the current_state has been modified
-#         # by the state logic, or externally by the machine)
-#         if current_state_index == (self.jog_state_index if self.jog_mode else self.active_state_index):
-#             # If a different state number was returned, execute_once is True
-#             if self.active_state_index != forced_state_index:
-#                 self.execute_once = True
-#             else:
-#                 self.execute_once = False                            
-#             # Finally make the next state the current state, unless
-#             # jog_mode is True, in which case the next state index
-#             # would be the next sequential index when jog() is called.
-#             if self.jog_mode:
-#                 self.jog_state_index = forced_state_index
-#             else:
-#                 self.active_state_index = forced_state_index
-#         
-#         return self.active_state_index
 
 
 
@@ -179,7 +153,7 @@ class State:
         self.logic = logic_function
         self.index = -1
     
-    def add_transition(self, transition_function, state):
+    def attach_transition(self, transition_function, state):
         transition = Transition(transition_function, state)
         self.transitions.append(transition) 
     
