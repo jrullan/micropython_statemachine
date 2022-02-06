@@ -69,7 +69,7 @@
 # Author: José Rullán
 # Date: February 1, 2022
 #============================================================================
-
+import time
 
 class Transition:
     def __init__(self, function, state):
@@ -87,6 +87,9 @@ class StateMachine:
         # Jog mode is used to prevent transitions including using transition_to
         # The jog() method will execute each state sequentially preventing transitions.
         self.jog_mode = False
+        self.new_state_index = -1
+        self.jog_state_index = -1
+        self.forced_state_index = -1
 
     # Creates a new state and adds it to the list
     # using the state_logic_function passed as parameter
@@ -100,10 +103,7 @@ class StateMachine:
 
     # Forces a transition to a particular state
     def transition_to(self, state):
-        if self.jog_mode:
-            return -1
-        self.active_state_index = state.index
-        self.execute_once = True
+        self.forced_state_index = state.index
         return state.index
 
     # If jog_mode is True, each time jog() is called it will
@@ -111,40 +111,65 @@ class StateMachine:
     # to the first state when all have been called
     def jog(self):
         if not self.jog_mode:
-            return  
-        self.active_state_index += 1
-        if self.active_state_index >= len(self.state_list):
-            self.active_state_index = 0
-        self.execute_once = True
+            return
+        prev_state = self.active_state_index
+        
+        if self.new_state_index != self.active_state_index:
+            #print("new_state_index while jogging",self.new_state_index)
+            self.execute_once = True
+            self.active_state_index = self.new_state_index
+            
+        elif self.forced_state_index != self.active_state_index:
+            #print("forced_state_index while jogging",self.forced_state_index)
+            self.execute_once = True
+            self.active_state_index = self.forced_state_index
+            
+        #print("state index", prev_state,"transitions",self.new_state_index, " forced",self.forced_state_index)
 
     # Runs the state machine
     def run(self):
         if len(self.state_list) == 0:
             return -1
         
-        # Store current state to check if it changed during execution
-        current_state_index = self.active_state_index
-        
-        # Execute the state's logic and get the next_state_index number
-        # If no transition ocurred returns it's own index as the next state index.
-        next_state_index = self.state_list[self.active_state_index].execute()
-        
-        # Process the transition if current_state remains the same after the state logic
-        # (This check is to ignore the transitions if the current_state has been modified
-        # by the state logic, or externally by the machine)
-        if current_state_index == self.active_state_index:
-            # If a different state number was returned, execute_once is True
-            if self.active_state_index != next_state_index:
+        # Execute active state logic
+        # Returns the number of the next state if a transition evaluated to True
+        # or the index of the active state if no transition has occurred
+        self.new_state_index = self.state_list[self.active_state_index].execute()
+
+        # Determine if execute_once should be True
+        # (meaning a new state must be executed)
+        self.execute_once = False
+        if not self.jog_mode:
+            
+            if self.new_state_index != self.active_state_index:        #<---- New state from transitions
                 self.execute_once = True
-            else:
-                self.execute_once = False                            
-            # Finally make the next state the current state, unless
-            # jog_mode is True, in which case the next state index
-            # would be the next sequential index when jog() is called.
-            if not self.jog_mode:
-                self.active_state_index = next_state_index
-        
+                self.active_state_index = self.new_state_index                                                                    
+                
+            elif self.forced_state_index != self.active_state_index:   #<---- New forced state
+                self.execute_once = True
+                self.active_state_index = self.forced_state_index   
+ 
         return self.active_state_index
+
+
+#         # Process the transition if current_state remains the same after the state logic
+#         # (This check is to ignore the transitions if the current_state has been modified
+#         # by the state logic, or externally by the machine)
+#         if current_state_index == (self.jog_state_index if self.jog_mode else self.active_state_index):
+#             # If a different state number was returned, execute_once is True
+#             if self.active_state_index != forced_state_index:
+#                 self.execute_once = True
+#             else:
+#                 self.execute_once = False                            
+#             # Finally make the next state the current state, unless
+#             # jog_mode is True, in which case the next state index
+#             # would be the next sequential index when jog() is called.
+#             if self.jog_mode:
+#                 self.jog_state_index = forced_state_index
+#             else:
+#                 self.active_state_index = forced_state_index
+#         
+#         return self.active_state_index
 
 
 

@@ -35,7 +35,7 @@ def state0_logic():
         update_text("State 0")
         explorer.update()
         time.sleep(1)
-
+    print("State 0 continous logic")
     state_machine.transition_to(state1)
 
 
@@ -105,11 +105,12 @@ while True:
             print("Machine in Jog Mode")
         else:
             print("Machine in Run Mode")
-    
-    
+
     if state_machine.jog_mode:    
         if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
             state_machine.jog()
-    
+
     state_machine.run()
+
+    
     explorer.update()  
