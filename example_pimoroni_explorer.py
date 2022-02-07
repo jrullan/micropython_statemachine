@@ -8,6 +8,7 @@ import picoexplorer as explorer
 state_machine = StateMachine()
 debouncing_timer = Neotimer(200)
 blinker = Neotimer(250)
+transition_timer = Neotimer(1000)
 
 led = Pin(25,Pin.OUT)
 led.off()
@@ -34,9 +35,10 @@ def state0_logic():
         print("Machine in State 0: System Initialization")
         update_text("State 0")
         explorer.update()
-        time.sleep(1)
+        transition_timer.start()
 
-    state_machine.force_transition_to(state1)
+    if transition_timer.finished():
+        state_machine.force_transition_to(state1)
 
 
 def state1_logic():

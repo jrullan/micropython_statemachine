@@ -70,6 +70,7 @@
 # Date: February 1, 2022
 #============================================================================
 
+
 class Transition:
     def __init__(self, function, state):
         self.function = function
@@ -97,6 +98,8 @@ class StateMachine:
         self.state_list.append(state)
         if self.active_state_index == -1:    #<---- Initially set active_state_index to 0
             self.active_state_index = 0
+            self.new_state_index = 0
+            self.forced_state_index = 0
         return state
 
     # Forces a transition to a particular state
@@ -107,11 +110,16 @@ class StateMachine:
     # Determines if there is a new state specified and
     # makes it active.
     def is_new_state(self):
+        
         if self.active_state_index != self.new_state_index:      #<---- From normal attached transitions
             self.active_state_index = self.new_state_index
+            self.new_state_index = self.active_state_index
+            self.forced_state_index = self.active_state_index
             return True
         elif self.active_state_index != self.forced_state_index: #<---- From forced transitions
             self.active_state_index = self.forced_state_index
+            self.forced_state_index = self.active_state_index
+            self.new_state_index = self.active_state_index
             return True
         else:
             return False
@@ -124,7 +132,6 @@ class StateMachine:
             return
         prev_state = self.active_state_index        
         self.execute_once = self.is_new_state()
-
 
     # Runs the state machine
     def run(self):
