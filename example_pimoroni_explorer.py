@@ -36,7 +36,7 @@ def state0_logic():
         explorer.update()
         time.sleep(1)
 
-    state_machine.transition_to(state1)
+    state_machine.force_transition_to(state1)
 
 
 def state1_logic():
@@ -45,7 +45,7 @@ def state1_logic():
         update_text("State 1")
 
     if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
-        state_machine.transition_to(state2)
+        state_machine.force_transition_to(state2)
 
     if blinker.repeat_execution():
         led.toggle()
@@ -58,7 +58,7 @@ def state2_logic():
         led.off()
         
     if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
-        state_machine.transition_to(state1)
+        state_machine.force_transition_to(state1)
     
         
 #============================================================

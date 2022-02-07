@@ -34,19 +34,19 @@
 #     tell the machine what the next state should be.
 #
 #
-#         def state1_transition_to_2():
+#         def state1_force_transition_to_2():
 #             if some_condition == True:
 #                 return True             #<---- Transition when some_condition is True
 #             else:
 #                 return False
 #
 # 
-#         state1.attach_transition(state1_transition_to_2, state2)   #<---- Attach state1 transition to state2, when some_condition == True
+#         state1.attach_transition(state1_force_transition_to_2, state2)   #<---- Attach state1 transition to state2, when some_condition == True
 #
 #
 #  4. Forced transitions
 #     An alternative way to specify the transitions without creating
-#     transition objects is to use the state machine's transition_to()
+#     transition objects is to use the state machine's force_transition_to()
 #     method. This method will force the transition to another state,
 #     bypassing any transitions attached to a particular state. This
 #     approach also has the benefit of not requiring the creation of
@@ -63,7 +63,7 @@
 #                 print("State 1 Logic: Blinking LED")
 # 
 #             if myTimer.finished():
-#                 myMachine.transition_to(state2)   #<---- If timer has finished force transition to state2
+#                 myMachine.force_transition_to(state2)   #<---- If timer has finished force transition to state2
 # 
 #
 # Author: José Rullán
@@ -83,12 +83,11 @@ class StateMachine:
         self.active_state_index = -1     #Indicates the current state number
         self.execute_once = True    #Indicates that a transition to a different state has occurred
         
-        # Jog mode is used to prevent transitions including using transition_to
+        # Jog mode is used to prevent transitions including using force_transition_to
         # The jog() method will execute each state sequentially preventing transitions.
         self.jog_mode = False
-        self.new_state_index = -1
-        self.jog_state_index = -1
-        self.forced_state_index = -1
+        self.new_state_index = -1      #<---- Keeps track of the new state determined by an attached transition
+        self.forced_state_index = -1   #<---- Keeps track of the new state determined by a forced transition (using force_transition_to())
 
     # Creates a new state and adds it to the list
     # using the state_logic_function passed as parameter
@@ -101,7 +100,7 @@ class StateMachine:
         return state
 
     # Forces a transition to a particular state
-    def transition_to(self, state):
+    def force_transition_to(self, state):
         self.forced_state_index = state.index
         return state.index
 
@@ -118,13 +117,14 @@ class StateMachine:
             return False
 
     # If jog_mode is True, each time jog() is called it will
-    # execute the next state in state_list, wrapping around
-    # to the first state when all have been called
+    # execute the next state state according to the transitions
+    # either, attached transitions or the forced transitions
     def jog(self):
         if not self.jog_mode:
             return
         prev_state = self.active_state_index        
         self.execute_once = self.is_new_state()
+
 
     # Runs the state machine
     def run(self):
