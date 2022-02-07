@@ -5,6 +5,8 @@ import time
 # Needs custom UF2 from Pimoroni
 import picoexplorer as explorer
 
+DEBUG_MODE = True
+
 state_machine = StateMachine()
 debouncing_timer = Neotimer(200)
 blinker = Neotimer(250)
@@ -30,65 +32,93 @@ explorer.update()
 #============================================================
 # States Logic Functions
 #============================================================
-def state0_logic():
+def idle_logic():
     if state_machine.execute_once:
-        print("Machine in State 0: System Initialization")
-        update_text("State 0")
-        explorer.update()
+        notify("Idle")
         transition_timer.start()
 
-    if transition_timer.finished():
-        state_machine.force_transition_to(state1)
-
-
-def state1_logic():
+def execute_logic():
     if state_machine.execute_once:
-        print("Machine in State 1: Blinking Led")
-        update_text("State 1")
-
-    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
-        state_machine.force_transition_to(state2)
-
-    if blinker.repeat_execution():
-        led.toggle()
-
-
-def state2_logic():
-    if state_machine.execute_once:
-        print("Machine in State 2: Led Off")
-        update_text("State 2")
-        led.off()
-        
-    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
-        state_machine.force_transition_to(state1)
+        notify("Execute")
+        transition_timer.start()
     
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
+        state_machine.force_transition_to(suspended)
         
+def completed_logic():
+    if state_machine.execute_once:
+        notify("Completed")
+        transition_timer.start()
+
+def suspended_logic():
+    if state_machine.execute_once:
+        notify("Suspended")
+
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_X)):
+        state_machine.force_transition_to(execute)
+
+
+def held_logic():
+    if state_machine.execute_once:
+        notify("Held")
+        
+def stopped_logic():
+    if state_machine.execute_once:
+        notify("Stopped")
+    
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)):
+        state_machine.force_transition_to(idle)
+
+def aborted_logic():
+    if state_machine.execute_once:
+        notify("Aborted")
+
+
 #============================================================
 # Add states to machine (Also create state objects)
 #============================================================
-state0 = state_machine.add_state(state0_logic)
-state1 = state_machine.add_state(state1_logic)
-state2 = state_machine.add_state(state2_logic)
+idle = state_machine.add_state(idle_logic)
+execute = state_machine.add_state(execute_logic)
+complete = state_machine.add_state(completed_logic)
+suspended = state_machine.add_state(suspended_logic)
+held = state_machine.add_state(held_logic)
+stopped = state_machine.add_state(stopped_logic)
+aborted = state_machine.add_state(aborted_logic)
 
 
 #============================================================
 # State Transitions Functions (optional)
 #============================================================
-# This is a transition from any state to state0 whenever the
-# B button is pressed.
-def transition_from_any_to_0():
-    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_B)):
+def next_transition():
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_A)) and transition_timer.finished():  #<---- Advance condition
         return True
     else:
         return False
 
+def stop_transition():
+    if debouncing_timer.debounce_signal(explorer.is_pressed(explorer.BUTTON_B)):  #<---- Stop condition
+        return True
+    else:
+        return False
+    
 #============================================================
 # Attach transitions to states (optional)
 #============================================================
 # Attach transitions to all states
 for state in state_machine.state_list:
-    state.attach_transition(transition_from_any_to_0, state0)
+    state.attach_transition(stop_transition, stopped)
 
+idle.attach_transition(next_transition,execute)
+execute.attach_transition(next_transition,complete)
+complete.attach_transition(next_transition,idle)
+
+
+# Use to print messages to LCD and optionally (when DEBUG_MODE == True)
+# to the shell
+def notify(string):
+    if DEBUG_MODE:
+        print(string)
+    update_text(string)
 
 # Draw a string in the LCD
 def update_text(string):
