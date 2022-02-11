@@ -1,6 +1,6 @@
 DEBUG_MODE = True
 
-import gc
+import _thread,gc
 from neotimer import *                    #<---- 3,088 bytes
 from statemachine import *                #<---- 3,616 bytes
 from pitches import *
@@ -11,9 +11,10 @@ state_machine = StateMachine()           #<--- 96 bytes
 debouncing_timer = Neotimer(200)         #<--- 64 bytes
 
 one_second_hold = Neotimer(1000)
-blinker = Neotimer(75)
 transition_timer = Neotimer(300)
-player = Neotimer(150)
+player_tempo = 150
+player = Neotimer(player_tempo)
+blinker = Neotimer(player_tempo/2)
 
 led = Pin(25,Pin.OUT)
 led.off()
@@ -21,12 +22,20 @@ led.off()
 buzzer = machine.PWM(machine.Pin(18))  # set pin 18 as PWM OUTPUT
 
 # Cytron onboard buttons
-BUTTON_A = Pin(20,Pin.IN,Pin.PULL_UP)
-BUTTON_B = Pin(22,Pin.IN,Pin.PULL_UP)
-BUTTON_C = Pin(21,Pin.IN,Pin.PULL_UP)
+BUTTON_1 = Pin(20,Pin.IN,Pin.PULL_UP)
+BUTTON_2 = Pin(21,Pin.IN,Pin.PULL_UP)
+BUTTON_3 = Pin(22,Pin.IN,Pin.PULL_UP)
 
 music_index = 0
 music = [E7, E7, 0, E7, 0, C7, E7, 0, G7, 0, 0, 0, G6, 0, 0, 0, C7, 0, 0, G6, 0, 0, E6, 0, 0, A6, 0, B6, 0, AS6, A6, 0, G6, E7, 0, G7, A7, 0, F7, G7, 0, E7, 0,C7, D7, B6, 0, 0, C7, 0, 0, G6, 0, 0, E6, 0, 0, A6, 0, B6, 0, AS6, A6, 0, G6, E7, 0, G7, A7, 0, F7, G7, 0, E7, 0,C7, D7, B6, 0, 0]
+
+free_memory_threshold = 0
+lock = _thread.allocate_lock()
+
+# Setup pins from 0 to 15 
+for i in range(16):                      
+    machine.Pin(i,machine.Pin.OUT)
+    
 
 def notify(string):
     if DEBUG_MODE:
@@ -45,11 +54,25 @@ def is_pressed(pin):
 def idle_logic():
     if state_machine.execute_once:
         notify("Idle")
+        notify("Adjust tempo by pressing button 2 (+) or button 3 (-)")
         transition_timer.start()
         led.off()
         buzzer.duty_u16(0)
     
     blink()
+    
+    # Suspend execution if button C is pressed during execute
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_2)):
+        player.duration += 5
+        blinker.duration = player.duration
+        print("Tempo: ", player.duration)
+
+    # Suspend execution if button C is pressed during execute
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_3)):
+        player.duration -= 5
+        blinker.duration = player.duration
+        print("Tempo: ", player.duration)
+        
         
 def starting_logic():
     if state_machine.execute_once:
@@ -88,7 +111,7 @@ def execute_logic():
         state_machine.force_transition_to(completing)
 
     # Suspend execution if button C is pressed during execute
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_C)):
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_2)):
         state_machine.force_transition_to(suspending)
         
     #--------------------------------------------------------------------------
@@ -138,7 +161,7 @@ def suspended_logic():
 
     blink()
     
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_C)):
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_2)):
         state_machine.force_transition_to(unsuspending)
 
 def unsuspending_logic():
@@ -161,7 +184,7 @@ def stopping_logic():
         transition_timer.start()
         buzzer.duty_u16(0)
     
-    if transition_timer.finished() and not is_pressed(BUTTON_B):
+    if transition_timer.finished() and not is_pressed(BUTTON_3):
         state_machine.force_transition_to(stopped)
 
 def stopped_logic():
@@ -170,7 +193,7 @@ def stopped_logic():
     
     led.off()
     
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_A)):
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_1)):
         state_machine.force_transition_to(resetting)
 
 
@@ -195,13 +218,13 @@ stopped = state_machine.add_state(stopped_logic)
 # State Transitions Functions (optional)
 #============================================================
 def next_transition():
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_A)) and transition_timer.finished():  #<---- Advance condition
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_1)) and transition_timer.finished():  #<---- Advance condition
         return True
     else:
         return False
 
 def stop_transition():
-    if one_second_hold.hold_signal(is_pressed(BUTTON_B)):
+    if one_second_hold.hold_signal(is_pressed(BUTTON_3)):
         return True
     else:
         return False
@@ -211,17 +234,64 @@ def stop_transition():
 #============================================================
 # Attach transitions to all states
 for state in state_machine.state_list:
-    state.attach_transition(stop_transition, stopping)
+    if state.index != 0:  #<---- All states except IDLE
+        state.attach_transition(stop_transition, stopping)
 
 idle.attach_transition(next_transition,starting)
 execute.attach_transition(next_transition,completing)
 completed.attach_transition(next_transition,resetting)
 
 
+
+##########################################################################
+# Main loops for Core 0 and Core 1
+##########################################################################
+
+def running_lights():  # This is the main loop running on Core 0 
+    #global variable
+    global free_memory_threshold
+
+    # Manually invoke garbage collection
+    # It might be required in both cores, but
+    # start using it on the fastest looping core.
+
+    if gc.mem_free() < free_memory_threshold:
+        #lock.acquire()
+        gc.collect()
+        #lock.release()
+        
+    # This will run on Core0, the state machine will run on Core1
+    for i in range(16):
+        machine.Pin(i).value(0)     # turn off the LED
+        time.sleep(0.1)            # sleep for 100ms
+        machine.Pin(i).value(1)     # turn on the LED
+            
+    #for i in range(15,-1,-1):           # from 28 to 0
+    for i in range(16):
+        machine.Pin(i).value(1)     # turn on the LED
+        time.sleep(0.1)
+        machine.Pin(i).value(0)     # turn off the LED
+
+
+def state_machine_logic():  # This is the main loop running on Core 1
+    # All variables manipulated here should be globals declared above
+    #global variable
+
+    while True:
+        # Code running on second_thread() loop here
+        state_machine.run()
+
+
+
+# Start second_thread() on Core 1
+_thread.start_new_thread(state_machine_logic, ())
+
+# Determine how much memory is free before starting
+# main loop in Core 0. This will be used as threshold
+# to determine if we should invoke gc.collect()
 gc.collect()
+free_memory_threshold = gc.mem_free()
 
 # Main Loop: Run the state machine here
 while True:
-
-    # Run state machine state's logics
-    state_machine.run()
+    running_lights()
