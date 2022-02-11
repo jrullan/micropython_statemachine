@@ -173,11 +173,6 @@ def stopped_logic():
     if debouncing_timer.debounce_signal(is_pressed(BUTTON_A)):
         state_machine.force_transition_to(resetting)
 
-# def aborted_logic():
-#     if state_machine.execute_once:
-#         notify("Aborted")
-# 
-#     led.off()
 
 #============================================================
 # Add states to machine (Also create state objects)
@@ -194,7 +189,6 @@ unsuspending = state_machine.add_state(unsuspending_logic)
 held = state_machine.add_state(held_logic)
 stopping = state_machine.add_state(stopping_logic)
 stopped = state_machine.add_state(stopped_logic)
-# aborted = state_machine.add_state(aborted_logic)
 
 
 #============================================================
