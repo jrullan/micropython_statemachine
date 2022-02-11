@@ -66,10 +66,11 @@ def execute_logic():
         notify("Execute")
         transition_timer.start()
         led.off()
-    
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_C)):
-        state_machine.force_transition_to(suspending)
-    
+
+    #--------------------------------------------------------------------------
+    #  CONTINUOUS LOGIC IN EXECUTE
+    #--------------------------------------------------------------------------
+   
     # Use player timer to play the notes until all notes have been played
     if player.repeat_execution() and music_index < len(music):
         note = music[music_index]
@@ -85,6 +86,13 @@ def execute_logic():
     # If all notes have been played transition to completing
     if music_index >= len(music):
         state_machine.force_transition_to(completing)
+
+    # Suspend execution if button C is pressed during execute
+    if debouncing_timer.debounce_signal(is_pressed(BUTTON_C)):
+        state_machine.force_transition_to(suspending)
+        
+    #--------------------------------------------------------------------------
+
 
 def completing_logic():
     if state_machine.execute_once:
