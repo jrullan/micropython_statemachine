@@ -10,6 +10,7 @@ import time
 state_machine = StateMachine()           #<--- 96 bytes
 debouncing_timer = Neotimer(200)         #<--- 64 bytes
 
+stop_hold = Neotimer(1000)
 blinker = Neotimer(75)
 transition_timer = Neotimer(300)
 player = Neotimer(150)
@@ -161,7 +162,7 @@ def stopping_logic():
         transition_timer.start()
         buzzer.duty_u16(0)
     
-    if transition_timer.finished():
+    if transition_timer.finished() and not is_pressed(BUTTON_B):
         state_machine.force_transition_to(stopped)
 
 def stopped_logic():
@@ -201,7 +202,8 @@ def next_transition():
         return False
 
 def stop_transition():
-    if debouncing_timer.debounce_signal(is_pressed(BUTTON_B)):  #<---- Stop condition
+#    if debouncing_timer.debounce_signal(is_pressed(BUTTON_B)):  #<---- Stop condition
+    if stop_hold.hold_signal(is_pressed(BUTTON_B)):
         return True
     else:
         return False
