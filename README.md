@@ -2,11 +2,15 @@
 
 This is a port from a library I developed for Arduino a while back. Now that I am working with Raspberry Pi Pico I decided to port it to Micropython. 
 
-This library implements a basic State Machine. The state logic and its transition's conditions are implemented as functions in your program for flexibility. 
-The machine is intended to be deterministic, meaning that you can only be in one state at a time 
-and transitions should occur only when your transition condition functions return true. 
+
+## Explanation
+
+This library implements a basic State Machine. State machines are used extensively in controllers and systems to guarantee that the program behaves deterministically. This means that at any point in time you know exactly the state of the application and only certain behaviors are allowed to happen while in a particular state. The application can only be
+in one state at any point in time. To change from one state to another there must be a transition condition logic that determines if a transition should occur. 
 
 Please note that if multiple transitions are defined for a state the first one to evaluate to true is the one that takes effect. 
+
+The state logic and its transition's conditions are implemented as functions in your program for flexibility. 
 
 ## States
 
