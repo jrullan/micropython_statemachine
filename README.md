@@ -25,7 +25,7 @@ Each state can have multiple transitions attached.
 Transitions require two parameters,
 
 1. The transition test function that returns a boolean value indicating whether or not the transition met the criteria defined in the function and
-2. The target state to which transition should occur when the criteria is met 
+2. The target state to transition to
 
 If none of the attached transitions evaluate to true, then the machine stays in the current state. 
 
