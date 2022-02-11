@@ -1,6 +1,6 @@
 # Micropython Statemachine
 
-This is a port from a library I developed for Arduino a while back. Now that I am working with Raspberry Pi Pico I decided to port it to Micropython. 
+This is a port from a library I developed for Arduino a while back. Now that I am working with Raspberry Pi Pico I decided to port it to Micropython. This library includes the Neotimer library (https://github.com/jrullan/micropython_neotimer) for convenience but it does not require it.
 
 
 ## Explanation
