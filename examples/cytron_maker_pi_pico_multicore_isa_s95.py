@@ -258,7 +258,6 @@ def running_lights():
         time.sleep(0.1)             # sleep for 100ms
         machine.Pin(i).value(1)     # turn on the LED
             
-    #for i in range(15,-1,-1):      # from 15 to 0
     for i in range(16):
         machine.Pin(i).value(1)     # turn on the LED
         time.sleep(0.1)
