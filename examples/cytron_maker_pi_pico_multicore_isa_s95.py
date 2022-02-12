@@ -263,14 +263,12 @@ def running_lights():
         time.sleep(0.1)
     
             
+#======> MULTICORE EXECUTION OF state_machine_logic() <=======
 # This will be running on Core 1
 def state_machine_logic():  
-
-    while True:
-        
+    while True:        
         state_machine.run()
 
-#======> MULTICORE EXECUTION OF state_machine_logic() <=======
 # Start state_machine_logic() on Core 1
 _thread.start_new_thread(state_machine_logic, ())
 
