@@ -1,5 +1,21 @@
 # Micropython Statemachine
 
+
+    Copyright [2022] [Jose Rullan]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
 This is a port from a library I developed for Arduino a while back. Now that I am working with Raspberry Pi Pico I decided to port it to Micropython. This library includes the Neotimer library (https://github.com/jrullan/micropython_neotimer) for convenience but it does not require it.
 
 
@@ -118,5 +134,29 @@ state1.attach_transition(delay_transition, state0)
 # Main Loop: Run the state machine here
 while True:
     state_machine.run()
+
+```
+
+## Raspberry Pi Pico - Multicore
+
+You could leverage your Pico dual core architecture by running the state machine in a separate core, leaving one core entirely for other non deterministic code (continuous functions).
+
+```python
+import _thread
+
+...
+
+# This is the main loop running on the second core (Core 1)
+def state_machine_logic():  
+    while True:
+        state_machine.run()
+
+# Start state_machine_logic() on second core
+_thread.start_new_thread(state_machine_logic, ())
+
+# Main Loop: Use for functionality not related to the states logic
+while True:
+    #---> do whatever here, the machine will run on the other core <---
+    ...
 
 ```
