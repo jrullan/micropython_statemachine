@@ -35,6 +35,8 @@ lock = _thread.allocate_lock()
 # Setup pins from 0 to 15 
 for i in range(16):                      
     machine.Pin(i,machine.Pin.OUT)
+
+leds_value = False
     
 
 def notify(string):
@@ -245,25 +247,22 @@ completed.attach_transition(next_transition,resetting)
 # This will be running on Core 0
 def running_lights():   
     global free_memory_threshold
-
+    global leds_value
+    
     # Manually invoke garbage collection
     if gc.mem_free() < free_memory_threshold:
         #lock.acquire()
         gc.collect()
         #lock.release()
-        
-    # This will run on Core0, the state machine will run on Core1
+
+    leds_value = not leds_value
+
+    # turn on or off all leds sequentially
     for i in range(16):
-        machine.Pin(i).value(0)     # turn off the LED
-        time.sleep(0.1)             # sleep for 100ms
-        machine.Pin(i).value(1)     # turn on the LED
-            
-    for i in range(16):
-        machine.Pin(i).value(1)     # turn on the LED
+        machine.Pin(i).value(leds_value)
         time.sleep(0.1)
-        machine.Pin(i).value(0)     # turn off the LED
-
-
+    
+            
 # This will be running on Core 1
 def state_machine_logic():  
 
