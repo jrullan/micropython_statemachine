@@ -24,7 +24,7 @@ This is a port from a library I developed for Arduino a while back. Now that I a
 This library implements a basic State Machine. State machines are used extensively in controllers and systems to guarantee that the program behaves deterministically. This means that at any point in time you know exactly the state of the application and only certain behaviors are allowed to happen while in a particular state. The application can only be
 in one state at any point in time. To change from one state to another there must be a transition condition logic that determines if a transition should occur. 
 
-Please note that if multiple transitions are defined for a state the first one to evaluate to true is the one that takes effect. 
+Please note that if multiple transitions are attached to a state, it will evaluate them in the order they were attached and the first one it finds that evaluates to True is the one that takes effect.
 
 The state logic and its transition's conditions are implemented as functions in your program for flexibility. 
 
