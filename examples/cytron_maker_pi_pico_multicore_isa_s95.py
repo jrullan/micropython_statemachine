@@ -98,14 +98,13 @@ def execute_logic():
    
     # Use player timer to play the notes until all notes have been played
     if player.repeat_execution() and music_index < len(music):
+        led.toggle()
         note = music[music_index]
         if note == 0:
             buzzer.duty_u16(0)            # 0% duty cycle
-            led.off()
         else:
             buzzer.freq(note)             # set frequency (notes)
             buzzer.duty_u16(19660)        # 30% duty cycle
-            led.on()
         music_index += 1
 
     # If all notes have been played transition to completing
